@@ -52,31 +52,46 @@ int
 onmessage(libwebsock_client_state *state, libwebsock_message *msg) {
 	fprintf(stderr, "Received message from client: %d\n", state->sockfd);
 	fprintf(stderr, "Message opcode: %d\n", msg->opcode);
-	//fprintf(stderr, "Payload Length: %llu\n", msg->payload_len);
-	//fprintf(stderr, "Payload: %s\n", msg->payload);
+	fprintf(stderr, "Payload Length: %llu\n", msg->payload_len);
+
+	const char delimitador[2] = "-";
+	char IP[50];
+	char rango[50];
+
+	memset(IP, '\0', sizeof(IP));
+	memset(rango, '\0', sizeof(rango));
+  
+
+	/* Obtengo la IP */
+	char * token = strtok(msg->payload, delimitador);
+	strcpy(IP, token);
+
+	/* Obtengo el rango */
+	token = strtok(NULL, delimitador);
+	strcpy(rango, token);
 	
-	free(msg->payload);
-	msg->payload = NULL;
+
+	fprintf(stderr,"IP : %s\n",IP);
+	fprintf(stderr,"Rango de puertos es: %s\n",rango);
 
 	//now let's send it back.
 	int argc = 4, pinitial, pfinal;
-	char a0[] = "apuertos";
-	char a1[] = "195.144.107.198";
-	char a2[] = "-r";
-	//char a3[] = "1:81";
-	char a3[] = "12:28";
-	char *argv[] = { a0, a1, a2, a3 };
+	char comando[] = "apuertos";
+	char opcion[] = "-r";
+	char *argv[] = { comando, IP, opcion, rango };
 	char *server_name;	
 	server_name = (char *) malloc(50);
 
 	validate_argv(argc, argv, server_name, &pinitial, &pfinal);
 	char json_report[2048];
+	fprintf(stderr,"pinitial es %i\n",pinitial);
+	fprintf(stderr,"pfinal es %i\n",pfinal);
 	getJSONReport(server_name, pinitial, pfinal, json_report);
+	fprintf(stderr, "%s",json_report);
 			
-//	char *example = "{\n	\"IP\": \"195.144.107.198\",\n	\"inicial\": 1,\n	\"final\": 1024,\n	\"cerrados\": {\n		\"cant\": 0,\n		\"list\": []\n	},\n	\"filtrados\": {\n		\"cant\": 1013,\n		\"list\": []\n	},\n	\"abiertos\": {\n		\"cant\": 1013,\n		\"list\": [\n			{\n				\"port\":\"13\",\n				\"service\":\"daytime\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"21\",\n				\"service\":\"ftp\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"22\",\n				\"service\":\"ssh\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"25\",\n				\"service\":\"smtp\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"37\",\n				\"service\":\"time\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"80\",\n				\"service\":\"http\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"143\",\n				\"service\":\"imap2\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"443\",\n			\"service\":\"https\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"444\",\n				\"service\":\"snpp\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"990\",\n				\"service\":\"ftps\",\n				\"state\":\"OPEN\"\n			},\n			{\n				\"port\":\"993\",\n				\"service\":\"imaps\",\n				\"state\":\"OPEN\"\n			}\n		]\n	}\n}\n";
-
-	//printf("-SIZE: %lu\n", strlen(json_report));
 	libwebsock_send_text(state, json_report);
+	/*free(msg->payload);
+	msg->payload = NULL;*/ 
 	return 0;
 }
 
@@ -93,8 +108,7 @@ onclose(libwebsock_client_state *state) {
 }
 
 int
-main(int argc, char *argv[]) {
-	
+main(int argc, char *argv[]) {	
 	libwebsock_context *ctx = NULL;
 	if(argc != 2) {
 	fprintf(stderr, "Usage: %s <port to listen on>\n\nNote: You must be root to bind to port below 1024\n", argv[0]);

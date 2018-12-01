@@ -20,13 +20,14 @@
 #include <fcntl.h>
 #include <sysexits.h>
 #include <arpa/inet.h>
+#include <getopt.h>
 #include <time.h>
 #include "list.h"
 #include "Apuertos.h"
 
 #define MAXTIME			1
 #define MIN_PORT		1
-#define MAX_PORT		1024
+#define MAX_PORT		1000
 #define IPSIZE			40
 #define PORTCHARSIZE	80
 #define ls				75
@@ -251,6 +252,9 @@ char* validate_argv(int argc, char **argv, char* server_name, int *pinitial, int
 	/* Valido la IP de entrada*/
 	char ip[IPSIZE], inputAux[IPSIZE];
 	char *token;
+
+	fprintf(stderr,"argv: %s\n", argv[3]);
+
 	*pinitial = MIN_PORT;
 	*pfinal = MAX_PORT;
 	strcpy(ip, argv[1]);
@@ -264,7 +268,6 @@ char* validate_argv(int argc, char **argv, char* server_name, int *pinitial, int
 	validIP = is_valid_ip(argv[1]);
 	validHost = get_ip(inputAux,server_name);
 	
-
 	if(validIP != EXIT_ERR_IP){ //verifica que el parámetro ingresado no sea nulo y que la IP sea válida
 		server_name = ip;
 		esIP = 1;
@@ -275,35 +278,35 @@ char* validate_argv(int argc, char **argv, char* server_name, int *pinitial, int
 			 exit(EXIT_ERR_INPUT);
 		}
 	}
-	
-	while((c = getopt(argc, argv, "r:h")) != -1) {
-		switch(c) {
-		case 'r':
-			    token = strtok(optarg, ":");
-				*pinitial = atoi(token);
-				if(*pinitial <= 0){
-					return	"EXIT_ERR_INPUT: El puerto inicial debe ser mayor o igual que 1. Vuelva a intentar\n";
-					exit(EXIT_ERR_INPUT);
-				}
-				for(j=0; j<2;j++){
-					if(token!=NULL){
-						token = strtok(NULL, ":");
-					}
-					if(j == 0){
-						*pfinal = atoi(token);
-						if (*pfinal < *pinitial){
-							return	"EXIT_ERR_INPUT: El puerto final debe ser más grande que el puerto inicial. Vuelva a intentar\n"; 
-							exit(EXIT_ERR_INPUT);
-						}
-						if (*pfinal > 1024){
-							return	"EXIT_ERR_INPUT: El máximo valor para el puerto final es 1024.\n"; 
-							exit(EXIT_ERR_INPUT);
-						}
-					}			
-				}
-			break;
-		}
+
+	char inicioAux[50];
+	char finAux[50];
+
+	memset(inicioAux, '\0', sizeof(inicioAux));
+	memset(finAux, '\0', sizeof(finAux));
+
+	token = strtok(argv[3],":");
+	strcpy(inicioAux,token);
+	*pinitial = atoi (inicioAux);
+
+	if(*pinitial <= 0){
+		return	"EXIT_ERR_INPUT: El puerto inicial debe ser mayor o igual que 1. Vuelva a intentar\n";
+		exit(EXIT_ERR_INPUT);
 	}
+
+	token = strtok(NULL, ":");
+	strcpy(finAux, token);
+
+	*pfinal = atoi(finAux);
+	if (*pfinal < *pinitial){
+		return	"EXIT_ERR_INPUT: El puerto final debe ser más grande que el puerto inicial. Vuelva a intentar\n"; 
+		exit(EXIT_ERR_INPUT);
+	}
+	if (*pfinal > 1000){
+		return	"EXIT_ERR_INPUT: El máximo valor para el puerto final es 1024.\n"; 
+		exit(EXIT_ERR_INPUT);
+	}
+
 	if(esIP)
 		return "_OK";
 	else
@@ -398,10 +401,11 @@ void getJSONReport(char *server_name, int pinitial, int pfinal, char *json_repor
 	scan_ports(server_name, pinitial, pfinal, &abiertos, &filtrados, &cerrados, &list_port);
 	
 	char json_listports[1024];
+	memset(json_listports, 0, strlen(json_listports)); 				// se inicializa el string
 	getPortServicesList(abiertos, list_port, json_listports);
 
 
-	memset(json_report, 0, strlen(json_listports)); 				// inicialzamos string
+	memset(json_report, 0, strlen(json_listports)); 				// se inicializa el string
 		
 	//	armamos json
 	strcat(json_report, "{\n");
@@ -439,13 +443,13 @@ void getJSONReport(char *server_name, int pinitial, int pfinal, char *json_repor
 		
 	strcat(json_report, "\t\"abiertos\": {\n");
 	strcat(json_report, "\t\t\"cant\": ");
-	sprintf(cport, "%d", filtrados);
+	sprintf(cport, "%d", abiertos);
 	strcat(json_report, cport);
 	strcat(json_report, ",\n");
 	strcat(json_report, "\t\t\"list\": ");	
 	strcat(json_report, json_listports);	// obtenemos lista de puertos
 	strcat(json_report, "\t}\n");
 	
-	strcat(json_report, "}");
+	strcat(json_report, "}\n");
 
 }

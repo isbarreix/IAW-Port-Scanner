@@ -1,7 +1,7 @@
   /*
     variable de conexion con socket.
   */
-  var socket = new WebSocket('ws://127.0.0.1:4567');
+  var socket = new WebSocket('ws://127.0.0.1:4565');
 
   /*
     Establecer conexion con socket
@@ -18,7 +18,6 @@
       console.log(event.data);
       var obj = JSON.parse(event.data);
       console.log(obj);
-
   };
 
   /*
@@ -29,5 +28,6 @@
   };
 
   function scan() {
-      socket.send('MSG_TEST: Hello server');
+      msg = "google.com.ar-80:81";
+      socket.send(msg);
   }
