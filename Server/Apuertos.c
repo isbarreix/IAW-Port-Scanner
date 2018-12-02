@@ -177,7 +177,7 @@ int conectar_sin_bloquear(int sockfd, struct sockaddr_in *host, socklen_t len , 
 	FD_SET (sockfd, &rset);
 	wset = rset;
 	time.tv_sec = 0;
-	time.tv_usec = 500000;			//	0.5 sec
+	time.tv_usec = 263000;			//	0.263 sec
 
 	if ((n = select (sockfd + 1, &rset, &wset, NULL, sec ? &time : NULL)) == 0) {
 		close (sockfd);
@@ -253,7 +253,6 @@ char* validate_argv(int argc, char **argv, char* server_name, int *pinitial, int
 	char ip[IPSIZE], inputAux[IPSIZE];
 	char *token;
 
-	fprintf(stderr,"argv: %s\n", argv[3]);
 
 	*pinitial = MIN_PORT;
 	*pfinal = MAX_PORT;

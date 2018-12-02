@@ -84,14 +84,12 @@ onmessage(libwebsock_client_state *state, libwebsock_message *msg) {
 
 	validate_argv(argc, argv, server_name, &pinitial, &pfinal);
 	char json_report[2048];
-	fprintf(stderr,"pinitial es %i\n",pinitial);
-	fprintf(stderr,"pfinal es %i\n",pfinal);
 	getJSONReport(server_name, pinitial, pfinal, json_report);
 	fprintf(stderr, "%s",json_report);
 			
 	libwebsock_send_text(state, json_report);
-	/*free(msg->payload);
-	msg->payload = NULL;*/ 
+	free(msg->payload);
+	msg->payload = NULL;
 	return 0;
 }
 
